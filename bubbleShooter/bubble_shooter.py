@@ -51,11 +51,16 @@ class Bubble:
             self.sound.play()
             
                 
-    def is_stuck(self): 
-        pass
+    def is_stuck(self, bubble_group): 
+        if self.pos[1] <= BUBBLE_RADIUS:
+            return True
+        for b in bubble_group:
+            if self.collide(b):
+                return True
+        return False
 
     def collide(self, bubble):
-        pass
+        return dist(self.pos, bubble.pos) <= 2 * BUBBLE_RADIUS
             
     def draw(self, canvas):
         canvas.draw_circle(self.pos, BUBBLE_RADIUS, 1, "White", self.color)
@@ -64,7 +69,7 @@ class Bubble:
 # define keyhandlers to control firing_angle
 def keydown(key):
     global a_bubble, firing_angle_vel, bubble_stuck
-    if simplegui.KEY_MAP["space"] == key:
+    if simplegui.KEY_MAP["space"] == key and bubble_stuck:
         bubble_stuck = False
         vel = angle_to_vector(firing_angle)
         a_bubble.fire_bubble([4 * vel[0], -4 * vel[1]])
@@ -95,9 +100,15 @@ def draw(canvas):
     
     # update a_bubble and check for sticking
     a_bubble.update()
+    if a_bubble.is_stuck(stuck_bubbles):
+        bubble_stuck = True
+        stuck_bubbles.add(a_bubble)
+        a_bubble = Bubble(firing_sound)
     
     # draw a bubble and stuck bubbles
     a_bubble.draw(canvas)
+    for b in stuck_bubbles:
+        b.draw(canvas)
  
 # create frame and register handlers
 frame = simplegui.create_frame("Bubble Shooter", WIDTH, HEIGHT)
@@ -107,4 +118,5 @@ frame.set_draw_handler(draw)
 
 # create initial buble and start frame
 a_bubble = Bubble(firing_sound)
+stuck_bubbles = set([])
 frame.start()
